@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀SmartRecruit</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800;900&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Floating Particles -->
+    <div class="particle" style="width: 100px; height: 100px; background: radial-gradient(circle, rgba(106, 17, 203, 0.3), transparent); top: 10%; left: 10%; animation-delay: 0s;"></div>
+    <div class="particle" style="width: 150px; height: 150px; background: radial-gradient(circle, rgba(37, 117, 252, 0.2), transparent); top: 60%; left: 80%; animation-delay: 2s;"></div>
+    <div class="particle" style="width: 80px; height: 80px; background: radial-gradient(circle, rgba(255, 107, 107, 0.3), transparent); top: 80%; left: 20%; animation-delay: 4s;"></div>
+
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>Smart<span>Recruit</span></h1>
+                <p>🚀 Next-gen ATS powered by AI. Upload your resume (PDF or TXT) to extract key information instantly.</p>
+            </div>
+            
+            <form id="upload-form">
+                <div class="file-upload-wrapper">
+                    <input type="file" id="resume-file" name="resume" accept=".pdf,.txt" required>
+                    <label for="resume-file" class="file-label">
+                        <span id="file-name">Drop your resume here or click to browse</span>
+                    </label>
+                </div>
+                <button type="submit" id="submit-btn">
+                    <span class="btn-text">⚡ Analyze Resume</span>
+                    <div class="spinner" id="loading-spinner"></div>
+                </button>
+            </form>
+            
+            <div id="error-message" class="error-msg"></div>
+
+            <div class="export-wrapper">
+                <a href="/export_excel" class="export-btn" id="export-btn">📊 Download All as Excel</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="main-header">
+                <h2>Analysis Results</h2>
+                <input type="text" id="search-bar" placeholder="🔍 Search by skill (e.g., Python, React, Machine Learning)...">
+                
+                <p class="intro-text" id="intro-text" style="display: {% if results %}none{% else %}block{% endif %};">
+                    ✨ Your processed resumes will appear here as beautiful cards with all extracted information.
+                </p>
+            </div>
+            
+            <div id="results-container">
+                {% for result in results %}
+                <div class="resume-card" 
+                     data-skills="{{ (result.groups['TECHNICAL SKILLS'] or []) | join(',') | lower }}"
+                     data-email="{{ (result.groups['EMAIL'] or [''])[0] }}"
+                     data-name="{{ (result.groups['NAME'] or ['Candidate'])[0] }}">
+                    
+                    <div class="card-header">
+                        <h3>{{ result.original_filename | e }}</h3>
+                        <a href="/download/{{ result.safe_filename | e }}" class="download-btn" target="_blank" title="View Original Resume">View Resume</a>
+                    </div>
+                    
+                    <div class="card-content"> 
+                        <table>
+                            <tbody>
+                                {% set labels = result.groups.keys() | list %}
+                                {% for label in labels | sort %}
+                                    {% if label == 'NAME' %}{% set order = 1 %}
+                                    {% elif label == 'EMAIL' %}{% set order = 2 %}
+                                    {% elif label == 'COLLEGE NAME' %}{% set order = 3 %}
+                                    {% elif label == 'TECHNICAL SKILLS' %}{% set order = 4 %}
+                                    {% else %}{% set order = 100 %}{% endif %}
+                                    
+                                    <tr data-order="{{ order }}">
+                                        <th>{{ label | e }}</th>
+                                        <td>
+                                            {% for item in result.groups[label] %}
+                                                <span class="entity-item {% if label == 'TECHNICAL SKILLS' %}skill-item{% endif %}">{{ item | e }}</span>
+                                            {% endfor %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="card-actions">
+                        <button class="btn-reject">Reject</button>
+                        <button class="btn-accept">Accept</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
